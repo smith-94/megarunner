@@ -38,7 +38,7 @@ class Player extends RectangleComponent
 
     position += _velocity * dt;
 
-    if (position.y > game.size.y) {
+    if (position.y > game.size.y || position.x + size.x < 0) {
       game.gameOver();
     }
   }
@@ -46,23 +46,32 @@ class Player extends RectangleComponent
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
-    if (other is SpriteComponent && other.parent is Ground) {
+
+    if (other is RectangleComponent && other.parent is Ground) {
       if (_velocity.y > 0) {
-        // If falling, stop at the ground
         _velocity.y = 0;
         position.y = other.absolutePosition.y - size.y;
         _isGrounded = true;
         _jumpCount = 0;
       }
     } else if (other is Obstacle) {
-      game.gameOver();
+      if (_velocity.y > 0 && position.y + size.y < other.position.y + 15) {
+        _velocity.y = 0;
+        position.y = other.position.y - size.y;
+        _isGrounded = true;
+        _jumpCount = 0;
+      } else {
+        // Side collision, push the player back.
+        position.x = other.absolutePosition.x - size.x;
+      }
     }
   }
 
   @override
   void onCollisionEnd(PositionComponent other) {
     super.onCollisionEnd(other);
-    if (other is SpriteComponent && other.parent is Ground) {
+    if ((other is RectangleComponent && other.parent is Ground) ||
+        other is Obstacle) {
       _isGrounded = false;
     }
   }
