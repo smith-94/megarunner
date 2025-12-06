@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:english_words/english_words.dart';
 import 'package:flame/components.dart';
 import 'package:megarunner/main.dart';
 import 'package:megarunner/obstacle.dart';
@@ -7,13 +8,6 @@ class ObstacleManager extends Component with HasGameReference<MegaRunnerGame> {
   final Random _random = Random();
   double _timeSinceLastObstacle = 0;
   double _obstacleInterval = 2.0;
-  late final Sprite _obstacleSprite;
-
-  @override
-  Future<void> onLoad() async {
-    await super.onLoad();
-    _obstacleSprite = await game.loadSprite('obstacle.png');
-  }
 
   @override
   void update(double dt) {
@@ -31,9 +25,8 @@ class ObstacleManager extends Component with HasGameReference<MegaRunnerGame> {
   }
 
   void _spawnObstacle() {
-    final newObstacle = Obstacle()
-      ..sprite = _obstacleSprite
-      ..position = Vector2(game.size.x, game.size.y - 82);
+    final word = nouns.elementAt(_random.nextInt(nouns.length));
+    final newObstacle = Obstacle(word);
     game.add(newObstacle);
   }
 }
