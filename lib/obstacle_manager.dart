@@ -3,28 +3,37 @@ import 'package:flame/components.dart';
 import 'package:megarunner/main.dart';
 import 'package:megarunner/obstacle.dart';
 
-class ObstacleManager extends Component with HasGameRef<MegaRunnerGame> {
+class ObstacleManager extends Component with HasGameReference<MegaRunnerGame> {
   final Random _random = Random();
-  final double _minSpawnTime = 2.0;
-  final double _maxSpawnTime = 4.0;
-  double _currentSpawnTime = 0.0;
-  double _timeSinceLastSpawn = 0.0;
+  double _timeSinceLastObstacle = 0;
+  double _obstacleInterval = 2.0;
+  late final Sprite _obstacleSprite;
 
   @override
-  void onMount() {
-    super.onMount();
-    _currentSpawnTime = _minSpawnTime + (_random.nextDouble() * (_maxSpawnTime - _minSpawnTime));
+  Future<void> onLoad() async {
+    await super.onLoad();
+    _obstacleSprite = await game.loadSprite('obstacle.png');
   }
 
   @override
   void update(double dt) {
     super.update(dt);
-    _timeSinceLastSpawn += dt;
 
-    if (_timeSinceLastSpawn >= _currentSpawnTime) {
-      _timeSinceLastSpawn = 0.0;
-      _currentSpawnTime = _minSpawnTime + (_random.nextDouble() * (_maxSpawnTime - _minSpawnTime));
-      game.add(Obstacle());
+    if (game.isGameStarted) {
+      _timeSinceLastObstacle += dt;
+
+      if (_timeSinceLastObstacle > _obstacleInterval) {
+        _spawnObstacle();
+        _timeSinceLastObstacle = 0;
+        _obstacleInterval = _random.nextDouble() * 2.0 + 2.0;
+      }
     }
+  }
+
+  void _spawnObstacle() {
+    final newObstacle = Obstacle()
+      ..sprite = _obstacleSprite
+      ..position = Vector2(game.size.x, game.size.y - 82);
+    game.add(newObstacle);
   }
 }

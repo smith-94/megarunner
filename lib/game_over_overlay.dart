@@ -9,7 +9,7 @@ class GameOverOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.black.withOpacity(0.5),
+      color: Colors.black54,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

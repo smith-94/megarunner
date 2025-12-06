@@ -1,86 +1,64 @@
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
-import 'package:flutter/material.dart';
-import 'package:megarunner/ground.dart';
 import 'package:megarunner/main.dart';
 import 'package:megarunner/obstacle.dart';
 
-class Player extends RectangleComponent
-    with HasGameRef<MegaRunnerGame>, CollisionCallbacks {
-  static const double _gravity = 800.0;
-  static const double _jumpForce = -400.0;
-
-  final Vector2 _velocity = Vector2.zero();
-  bool _isGrounded = false;
-  int _jumpCount = 0;
-
-  Player()
-      : super(
-          size: Vector2.all(60),
-          paint: Paint()..color = Colors.blue,
-        );
+class Player extends SpriteAnimationComponent
+    with HasGameReference<MegaRunnerGame>, CollisionCallbacks {
+  final double _jumpForce = 20;
+  final double _gravity = 0.9;
+  double _velocity = 0;
+  bool _isOnGround = true;
 
   @override
   Future<void> onLoad() async {
-    super.onLoad();
-    position = Vector2(50, game.size.y - 100);
-    add(CircleHitbox());
+    await super.onLoad();
+    animation = await game.loadSpriteAnimation(
+      'player.png',
+      SpriteAnimationData.sequenced(
+        amount: 4,
+        stepTime: 0.1,
+        textureSize: Vector2(32, 32),
+      ),
+    );
+    position = Vector2(50, game.size.y - 64);
+    add(RectangleHitbox());
   }
 
   @override
   void update(double dt) {
     super.update(dt);
+    if (isMounted && game.isGameStarted) {
+      _velocity += _gravity;
+      position.y += _velocity;
 
-    // Apply gravity
-    if (!_isGrounded) {
-      _velocity.y += _gravity * dt;
-    }
-
-    position += _velocity * dt;
-
-    if (position.y > game.size.y || position.x + size.x < 0) {
-      game.gameOver();
-    }
-  }
-
-  @override
-  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-    super.onCollision(intersectionPoints, other);
-
-    if (other is RectangleComponent && other.parent is Ground) {
-      if (_velocity.y > 0) {
-        _velocity.y = 0;
-        position.y = other.absolutePosition.y - size.y;
-        _isGrounded = true;
-        _jumpCount = 0;
+      if (position.y > game.size.y - 64) {
+        position.y = game.size.y - 64;
+        _velocity = 0;
+        _isOnGround = true;
       }
-    } else if (other is Obstacle) {
-      if (_velocity.y > 0 && position.y + size.y < other.position.y + 15) {
-        _velocity.y = 0;
-        position.y = other.position.y - size.y;
-        _isGrounded = true;
-        _jumpCount = 0;
-      } else {
-        // Side collision, push the player back.
-        position.x = other.absolutePosition.x - size.x;
-      }
-    }
-  }
-
-  @override
-  void onCollisionEnd(PositionComponent other) {
-    super.onCollisionEnd(other);
-    if ((other is RectangleComponent && other.parent is Ground) ||
-        other is Obstacle) {
-      _isGrounded = false;
     }
   }
 
   void jump() {
-    if (_isGrounded || _jumpCount < 2) {
-      _velocity.y = _jumpForce;
-      _isGrounded = false;
-      _jumpCount++;
+    if (_isOnGround) {
+      _velocity = -_jumpForce;
+      _isOnGround = false;
+    }
+  }
+
+  void reset() {
+    position = Vector2(50, game.size.y - 64);
+    _velocity = 0;
+    _isOnGround = true;
+  }
+
+  @override
+  void onCollisionStart(
+      Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollisionStart(intersectionPoints, other);
+    if (other is Obstacle) {
+      game.gameOver();
     }
   }
 }
