@@ -3,24 +3,28 @@ import 'package:flame/components.dart';
 import 'package:megarunner/ground.dart';
 import 'package:megarunner/main.dart';
 import 'package:megarunner/obstacle.dart';
+import 'package:megarunner/word.dart';
 
 class Player extends SpriteComponent
     with HasGameReference<MegaRunnerGame>, CollisionCallbacks {
-  final double _jumpForce = 20;
+  final double _jumpForce = 15;
   final double _gravity = 0.9;
   double _velocity = 0;
   bool _isOnGround = true;
   int _jumpCount = 0;
   final int _maxJumps = 2; // Allow double jump
 
-  Player() : super(size: Vector2.all(64));
+  Player() : super(size: Vector2.all(64)) {
+    debugMode = true; // Enable debug mode to see the player's hitbox
+  }
 
   @override
   Future<void> onLoad() async {
     await super.onLoad();
     sprite = await game.loadSprite('runner.png');
     position = Vector2(50, game.size.y - 64 - 32);
-    add(RectangleHitbox());
+    add(RectangleHitbox(collisionType: CollisionType.active));
+    priority = 1; // Give player a higher priority
   }
 
   @override
@@ -63,6 +67,9 @@ class Player extends SpriteComponent
       Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollisionStart(intersectionPoints, other);
     if (other is Obstacle) {
+      game.gameOver();
+    } else if (other is Word) { // New: Game over on collision with a Word
+      print('Player collided with a Word!'); // Add this line for debugging
       game.gameOver();
     } else if (other is RectangleComponent && other.parent is Ground) {
       if (_velocity > 0) {

@@ -10,6 +10,8 @@ import 'package:megarunner/obstacle.dart';
 import 'package:megarunner/obstacle_manager.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:megarunner/player.dart';
+import 'package:megarunner/word.dart';
+import 'package:megarunner/word_manager.dart';
 
 void main() {
   runApp(const App());
@@ -70,9 +72,9 @@ class MegaRunnerGame extends FlameGame with HasCollisionDetection, TapCallbacks 
   double get gameSpeed => currentSpeed;
 
   // Dynamic Speed Variables
-  static const double _baseSpeed = 200.0;
-  static const double _speedIncreaseFactor = 10.0; // How fast the speed increases over time
-  static const double _maxSpeed = 600.0; // Maximum speed limit, adjusted to be not too fast
+  static const double _baseSpeed = 120.0;
+  static const double _speedIncreaseFactor = 5.0; // How fast the speed increases over time
+  static const double _maxSpeed = 350.0; // Maximum speed limit, adjusted to be not too fast
   static const double _speedChangeInterval = 5.0; // How often the target speed changes
   double _timeElapsed = 0.0;
   double currentSpeed = _baseSpeed;
@@ -92,6 +94,8 @@ class MegaRunnerGame extends FlameGame with HasCollisionDetection, TapCallbacks 
     children.whereType<Background>().forEach((b) => b.removeFromParent());
     children.whereType<Obstacle>().forEach((o) => o.removeFromParent());
     children.whereType<ObstacleManager>().forEach((om) => om.removeFromParent());
+    children.whereType<WordManager>().forEach((wm) => wm.removeFromParent()); // Remove existing WordManager
+    children.whereType<Word>().forEach((w) => w.removeFromParent()); // Remove existing Words
 
     score = 0;
     _isGameOver = false;
@@ -103,6 +107,7 @@ class MegaRunnerGame extends FlameGame with HasCollisionDetection, TapCallbacks 
     add(Background());
     add(Ground());
     add(ObstacleManager());
+    add(WordManager()); // Add WordManager
     _player = Player();
     add(_player);
 
